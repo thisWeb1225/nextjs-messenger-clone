@@ -8,6 +8,7 @@ import { useForm, FieldValues, SubmitHandler } from "react-hook-form";
 import Input from "@/app/components/input/Input";
 import Button from "@/app/components/Button";
 import AuthSocialButton from "./AuthSocialButton";
+import { BsGithub, BsGoogle } from 'react-icons/bs'
 
 // Type
 type VariantType = 'LOGIN' | 'REGISTER';
@@ -85,6 +86,7 @@ const AuthForm = () => {
               label="Name"
               register={register}
               errors={errors}
+              disabled={isLoaindg}
             />
           )}
           <Input
@@ -92,12 +94,14 @@ const AuthForm = () => {
             label="Email address"
             register={register}
             errors={errors}
+            disabled={isLoaindg}
           />
           <Input
             id="password"
             label="Password"
             register={register}
             errors={errors}
+            disabled={isLoaindg}
           />
           <div>
             <Button
@@ -144,11 +148,39 @@ const AuthForm = () => {
               </span>
             </div>
           </div>
-            {/* Social login in */}
-          <div className="mt-6 ">
-            <AuthSocialButton />
-          </div>
 
+          {/* Social login in */}
+          <div className="mt-6 flex gap-2">
+            <AuthSocialButton
+              icon={BsGithub}
+              onClick={() => socialAction('github')}
+            />
+            <AuthSocialButton
+              icon={BsGoogle}
+              onClick={() => socialAction('google')}
+            />
+          </div>
+        </div>
+
+        {/* create a new account */}
+        <div className="
+            flex
+            gap-2
+            justify-center
+            text-sm
+            mt-6
+            px-2
+            text-gray-500
+        ">
+          <div>
+            {variant === 'LOGIN' ? 'New to Messenger?' : 'Already have a account?'}
+          </div>
+          <div
+            onClick={toggleVariant}
+            className="underline cursor-pointer"
+          >
+            {variant === 'LOGIN' ? 'Create an account' : 'Login'}
+          </div>
         </div>
       </div>
     </div>
