@@ -9,6 +9,10 @@ const config: Config = {
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [
+    require("@tailwindcss/forms")({
+      stategy: 'class'
+    })
+  ],
 }
 export default config
