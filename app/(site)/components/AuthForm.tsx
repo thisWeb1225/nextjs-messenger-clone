@@ -1,10 +1,11 @@
 'use client';
 
 import axios from 'axios';
+import toast from 'react-hot-toast';
+import { signIn } from 'next-auth/react';
 // Hook
 import { useCallback, useState } from 'react';
 import { useForm, FieldValues, SubmitHandler } from 'react-hook-form';
-
 // Components
 import Input from '@/app/components/input/Input';
 import Button from '@/app/components/Button';
@@ -16,7 +17,7 @@ type VariantType = 'LOGIN' | 'REGISTER';
 
 const AuthForm = () => {
   const [variant, setVariant] = useState<VariantType>('LOGIN');
-  const [isLoaindg, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleVariant = useCallback(() => {
     if (variant === 'LOGIN') {
@@ -42,9 +43,27 @@ const AuthForm = () => {
     setIsLoading(true);
 
     if (variant === 'REGISTER') {
-      axios.post('/api/register', data);
-    } else {
-      // NextAuth SignIn
+      axios
+        .post('/api/register', data)
+        .catch(() => toast.error('Something went wrong！'))
+        .finally(() => setIsLoading(false));
+    }
+
+    if (variant === 'LOGIN') {
+      signIn('credentials', {
+        ...data,
+        redirect: false,
+      })
+        .then((callback) => {
+          if (callback?.error) {
+            toast.error('Invalid credentials');
+          }
+
+          if (callback?.ok && !callback?.error) {
+            toast.success('Logged in!');
+          }
+        })
+        .finally(() => setIsLoading(false));
     }
   };
 
@@ -80,7 +99,7 @@ const AuthForm = () => {
               label="Name"
               register={register}
               errors={errors}
-              disabled={isLoaindg}
+              disabled={isLoading}
             />
           )}
           <Input
@@ -88,23 +107,23 @@ const AuthForm = () => {
             label="Email address"
             register={register}
             errors={errors}
-            disabled={isLoaindg}
+            disabled={isLoading}
           />
           <Input
             id="password"
             label="Password"
             register={register}
             errors={errors}
-            disabled={isLoaindg}
+            disabled={isLoading}
           />
           <div>
-            <Button type="submit" fullWidth disabled={isLoaindg}>
+            <Button type="submit" fullWidth disabled={isLoading}>
               {variant === 'LOGIN' ? 'Sign in' : 'Register'}
             </Button>
           </div>
         </form>
 
-        {/* Anoter login method */}
+        {/* Another login method */}
         <div className="mt-6">
           <div className="relative">
             {/* divider */}
