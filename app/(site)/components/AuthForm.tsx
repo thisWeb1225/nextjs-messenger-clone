@@ -2,10 +2,11 @@
 
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 // Hook
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, FieldValues, SubmitHandler } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
 // Components
 import Input from '@/app/components/input/Input';
 import Button from '@/app/components/Button';
@@ -18,6 +19,15 @@ type VariantType = 'LOGIN' | 'REGISTER';
 const AuthForm = () => {
   const [variant, setVariant] = useState<VariantType>('LOGIN');
   const [isLoading, setIsLoading] = useState(false);
+  const session = useSession();
+  const router = useRouter();
+
+  // if user is login, jump to users page
+  useEffect(() => {
+    if (session?.status === 'authenticated') {
+      router.push('/users');
+    }
+  }, [session?.status]);
 
   // change the login and register form
   const toggleVariant = () => {
@@ -28,6 +38,7 @@ const AuthForm = () => {
     }
   };
 
+  // init the form
   const {
     register,
     handleSubmit,
