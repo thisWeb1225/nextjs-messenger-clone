@@ -4,7 +4,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { signIn } from 'next-auth/react';
 // Hook
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { useForm, FieldValues, SubmitHandler } from 'react-hook-form';
 // Components
 import Input from '@/app/components/input/Input';
@@ -19,13 +19,14 @@ const AuthForm = () => {
   const [variant, setVariant] = useState<VariantType>('LOGIN');
   const [isLoading, setIsLoading] = useState(false);
 
-  const toggleVariant = useCallback(() => {
+  // change the login and register form
+  const toggleVariant = () => {
     if (variant === 'LOGIN') {
       setVariant('REGISTER');
     } else {
       setVariant('LOGIN');
     }
-  }, []);
+  };
 
   const {
     register,
@@ -39,6 +40,7 @@ const AuthForm = () => {
     },
   });
 
+  // Handle normal credentials log in
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
     setIsLoading(true);
 
@@ -67,10 +69,22 @@ const AuthForm = () => {
     }
   };
 
-  const socialAction = (action: string) => {
+  // Handle github or google log in
+  const socialAction = (action: 'github' | 'google') => {
     setIsLoading(true);
 
     // NextAuth Social Sign In
+    signIn(action, { redirect: false })
+      .then((callback) => {
+        if (callback?.error) {
+          toast.error('Invalid Credentials');
+        }
+
+        if (callback?.ok && !callback?.error) {
+          toast.success('Logged in!');
+        }
+      })
+      .finally(() => setIsLoading(false));
   };
 
   return (
