@@ -1,6 +1,3 @@
-'use client';
-
-import { signOut } from 'next-auth/react';
 //Components
 import EmptyState from '../components/EmptyState';
 
