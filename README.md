@@ -8,6 +8,7 @@
 5. react-hook-form 製作、驗證表單
 6. NextAuth 第三方登陸
 7. next-cloudinary 處理圖片上傳
+8. headlessui tailwind UI 庫
 
 ## 筆記
 如果要讓 Next 載入其他網域的圖片，需要到 `next.config.js` 配置，如下
