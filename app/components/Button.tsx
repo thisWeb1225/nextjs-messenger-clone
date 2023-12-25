@@ -1,11 +1,11 @@
-import clsx from "clsx"
+import clsx from 'clsx';
 
 interface ButtonProps {
   type?: 'button' | 'submit' | 'reset' | undefined;
   fullWidth?: boolean;
   children?: React.ReactNode;
   onClick?: () => void;
-  sencondary?: boolean;
+  secondary?: boolean;
   danger?: boolean;
   disabled?: boolean;
 }
@@ -15,16 +15,17 @@ const Button: React.FC<ButtonProps> = ({
   fullWidth,
   children,
   onClick,
-  sencondary,
+  secondary: secondary,
   danger,
-  disabled
+  disabled,
 }) => {
   return (
     <button
       onClick={onClick}
       type={type}
       disabled={disabled}
-      className={clsx(`
+      className={clsx(
+        `
         flex
         justify-center
         rounded-md
@@ -39,14 +40,17 @@ const Button: React.FC<ButtonProps> = ({
       `,
         disabled && 'opacity-50 cursor-default',
         fullWidth && 'w-full',
-        sencondary ? 'text-gray-900' : 'text-white',
-        danger && 'bg-rose-500 hover:bg-rose-600 focus-visible:outline-rose-600',
-        !sencondary && !danger && 'bg-sky-500 hover:bg-sky-600 focus-visible:outline-sky-600'
+        secondary ? 'text-gray-900' : 'text-white',
+        danger &&
+          'bg-rose-500 hover:bg-rose-600 focus-visible:outline-rose-600',
+        !secondary &&
+          !danger &&
+          'bg-sky-500 hover:bg-sky-600 focus-visible:outline-sky-600'
       )}
     >
       {children}
     </button>
-  )
-}
+  );
+};
 
-export default Button
+export default Button;
