@@ -1,16 +1,16 @@
 'use client';
 
 // Hooks
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import useOtherUser from '@/app/hooks/useOtherUser';
+import { useSession } from 'next-auth/react';
 // Libs
 import { format } from 'date-fns';
 import clsx from 'clsx';
 // Types
 import { FullConversationType } from '@/app/types';
-import { Conversation, Message, User } from '@prisma/client';
-import useOtherUser from '@/app/hooks/useOtherUser';
-import { useSession } from 'next-auth/react';
+// Components
 import Avatar from '@/app/components/Avatar';
 
 interface ConversationBoxProps {
@@ -26,18 +26,13 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
   const session = useSession();
   const router = useRouter();
 
-  const jumpToConversationPage = useCallback(() => {
+  const jumpToConversationPage = () => {
     router.push(`/conversations/${data.id}`);
-  }, [data.id, router]);
+  };
 
-  const lastMessage = useMemo(() => {
-    const messages = data.messages || [];
-    return messages[messages.length - 1];
-  }, [data.messages]);
+  const lastMessage = data.messages[data.messages.length - 1] || [];
 
-  const userEmail = useMemo(() => {
-    return session.data?.user?.email;
-  }, [session.data?.user?.email]);
+  const userEmail = session.data?.user?.email;
 
   const hasSeen = useMemo(() => {
     if (!lastMessage) {
@@ -55,7 +50,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
     return seenArray.filter((user) => user.email === userEmail).length === 0;
   }, [userEmail, lastMessage]);
 
-  const lastMessageText = useMemo(() => {
+  const lastMessageText = (function () {
     if (lastMessage?.image) {
       return 'Sent an image';
     }
@@ -66,7 +61,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
 
     // The conversation has not yet started
     return 'Started a conversation';
-  }, [lastMessage]);
+  })();
 
   return (
     <div
