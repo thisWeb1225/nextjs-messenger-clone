@@ -2,6 +2,13 @@ import getCurrentUser from '@/app/actions/getCurrentUser';
 import { NextResponse } from 'next/server';
 import prisma from '@/app/libs/prismadb';
 
+
+/**
+ * Handle POST request to create a new conversation or retrieve an existing one.
+ * @param {Request} request - The incoming request object.
+ * @returns {Promise<Response>} - The response to the request.
+ */
+
 export async function POST(request: Request) {
   try {
     const currentUser = await getCurrentUser();
@@ -16,6 +23,7 @@ export async function POST(request: Request) {
       return new NextResponse('Invalid data', { status: 400 });
     }
 
+    // Create a new group conversation
     if (isGroup) {
       const newConversation = await prisma.conversation.create({
         data: {
@@ -40,6 +48,7 @@ export async function POST(request: Request) {
       return NextResponse.json(newConversation);
     }
 
+    // Retrieve an existing conversation
     const existingConversation = await prisma.conversation.findMany({
       where: {
         OR: [
@@ -59,10 +68,12 @@ export async function POST(request: Request) {
 
     const singleConversation = existingConversation[0];
 
+    // Return the existing conversation if found
     if (singleConversation) {
       return NextResponse.json(singleConversation);
     }
 
+    // if no conversation is found, create a new one
     const newConversation = await prisma.conversation.create({
       data: {
         users: {
