@@ -2,8 +2,6 @@ import getCurrentUser from '@/app/actions/getCurrentUser';
 import { NextResponse } from 'next/server';
 import prisma from '@/app/libs/prismadb';
 
-import { Conversation, User } from '@prisma/client';
-
 export async function POST(request: Request) {
   try {
     const currentUser = await getCurrentUser();
@@ -14,7 +12,7 @@ export async function POST(request: Request) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    if (isGroup && (!members || members.length < 2 || name)) {
+    if (isGroup && (!members || members.length < 2 || !name)) {
       return new NextResponse('Invalid data', { status: 400 });
     }
 
