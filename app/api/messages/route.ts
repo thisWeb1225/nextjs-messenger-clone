@@ -1,6 +1,7 @@
 import getCurrentUser from '@/app/actions/getCurrentUser';
 import { NextResponse } from 'next/server';
 import prisma from '@/app/libs/prismadb';
+import { pusherServer } from '@/app/libs/pusher';
 
 export async function POST(request: Request) {
   try {
@@ -58,6 +59,33 @@ export async function POST(request: Request) {
           },
         },
       },
+    });
+
+    // pusherServer for realtime
+    await pusherServer
+      .trigger(conversationId, 'messages:new', newMessage)
+      .catch((error) => {
+        console.error(
+          'ERROR_MESSAGES : PusherServer Error in api/messages',
+          error
+        );
+      });
+
+    const lastMessage =
+      updateConversation.messages[updateConversation.messages.length - 1];
+
+    updateConversation.users.forEach((user) => {
+      pusherServer
+        .trigger(user.email!, 'conversation:update', {
+          id: conversationId,
+          messages: [lastMessage],
+        })
+        .catch((error) => {
+          console.error(
+            'ERROR_MESSAGES : PusherServer Error in api/messages',
+            error
+          );
+        });
     });
 
     return NextResponse.json(newMessage);

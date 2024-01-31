@@ -1,12 +1,15 @@
 'use client';
 // Hooks & Actions
 import useConversation from '@/app/hooks/useConversation';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { useState, useEffect } from 'react';
 // Type
 import { FullConversationType } from '@/app/types';
 import { User } from '@prisma/client';
 // Libs
 import clsx from 'clsx';
+import { pusherClient } from '@/app/libs/pusher';
 // Components
 import { MdOutlineGroup } from 'react-icons/md';
 import ConversationBox from './ConversationBox';
@@ -21,8 +24,64 @@ const ConversationList: React.FC<ConversationListProps> = ({
   initialItems,
   users,
 }) => {
+  const [items, setItems] = useState(initialItems);
   const { conversationId, isOpen } = useConversation();
   const [isModalOpen, setIsModalPen] = useState(false);
+
+  const router = useRouter();
+  const session = useSession();
+
+  const pusherKey = session.data?.user?.email;
+
+  useEffect(() => {
+    if (!pusherKey) {
+      return;
+    }
+
+    pusherClient.subscribe(pusherKey);
+
+    const updateHandler = (conversation: FullConversationType) => {
+      setItems((current) =>
+        current.map((currentConversation) => {
+          if (currentConversation.id === conversation.id) {
+            return {
+              ...currentConversation,
+              messages: conversation.messages,
+            };
+          }
+
+          return currentConversation;
+        })
+      );
+    };
+
+    const newHandler = (conversation: FullConversationType) => {
+      setItems((current) => {
+        const existedItem = current.find((item) => {
+          return item.id === conversation.id;
+        });
+        if (existedItem) return current;
+
+        return [conversation, ...current];
+      });
+    };
+
+    const removeHandler = (conversation: FullConversationType) => {
+      // Remove conversation from list state
+      setItems((current) => {
+        return [...current.filter((conversationItem) => conversationItem.id !== conversation.id)];
+      });
+
+      // Redirect to conversations page
+      if (conversationId === conversation.id) {
+        router.push('/conversations');
+      }
+    };
+
+    pusherClient.bind('conversation:update', updateHandler);
+    pusherClient.bind('conversation:new', newHandler);
+    pusherClient.bind('conversation:remove', removeHandler);
+  }, [pusherKey, router]);
 
   return (
     <>
@@ -47,7 +106,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
               <MdOutlineGroup />
             </div>
           </div>
-          {initialItems.map((item) => (
+          {items.map((item) => (
             <ConversationBox
               key={item.id}
               data={item}

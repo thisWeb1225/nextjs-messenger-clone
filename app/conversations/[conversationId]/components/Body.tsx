@@ -8,19 +8,64 @@ import { FullMessageType } from '@/app/types';
 // Components
 import MessageBox from './MessageBox';
 import axios from 'axios';
+import { pusherClient } from '@/app/libs/pusher';
 
 interface BodyProps {
   initialMessages: FullMessageType[];
 }
 
-const Body: React.FC<BodyProps> = ({ initialMessages }) => {
-  const [messages, setMessage] = useState(initialMessages);
+function updateSeenStatus(conversationId: string) {
+  axios.post(`/api/conversations/${conversationId}/seen`);
+}
+
+const Body: React.FC<BodyProps> = ({ initialMessages = [] }) => {
+  const [messages, setMessages] = useState(initialMessages);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const { conversationId } = useConversation();
 
+  useEffect(() => updateSeenStatus(conversationId), [conversationId]);
+
   useEffect(() => {
-    axios.post(`/api/conversations/${conversationId}/seen`);
+    const channel = pusherClient.subscribe(conversationId);
+    bottomRef?.current?.scrollIntoView();
+
+    const messageHandler =(message: FullMessageType) => {
+      updateSeenStatus(conversationId);
+
+      setMessages((currents) => {
+        const existedMessage = currents.find((current) => {
+          return current.id === message.id;
+        });
+
+        if (existedMessage) return currents;
+
+        return [...currents, message];
+      });
+
+      bottomRef?.current?.scrollIntoView();
+    }
+
+    const updateMessageHandler = (newMessage: FullMessageType) => {
+      setMessages((current) =>
+        current.map((currentMessage) => {
+          if (currentMessage.id === newMessage.id) {
+            return newMessage;
+          }
+
+          return currentMessage;
+        })
+      );
+    }
+
+    pusherClient.bind('messages:new', messageHandler);
+    pusherClient.bind('message:update', updateMessageHandler);
+
+    return () => {
+      pusherClient.unsubscribe(conversationId);
+      pusherClient.unbind('messages:new', messageHandler);
+      pusherClient.unbind('message:update', updateMessageHandler);
+    };
   }, [conversationId]);
 
   return (

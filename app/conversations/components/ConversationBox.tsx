@@ -31,7 +31,9 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
     router.push(`/conversations/${data.id}`);
   };
 
-  const lastMessage = data.messages[data.messages.length - 1] || [];
+  const lastMessage = data.messages
+    ? data.messages[data.messages.length - 1]
+    : null;
 
   const userEmail = session.data?.user?.email;
 
@@ -48,10 +50,10 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
     }
 
     // the users who seen the message. if nobody seen, return false
-    return seenArray.filter((user) => user.email === userEmail).length === 0;
+    return seenArray.filter((user) => user.email === userEmail).length !== 0;
   }, [userEmail, lastMessage]);
 
-  const lastMessageText = (function () {
+  const lastMessageText = (() => {
     if (lastMessage?.image) {
       return 'Sent an image';
     }

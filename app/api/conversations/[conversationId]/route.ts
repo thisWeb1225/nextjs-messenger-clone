@@ -1,11 +1,44 @@
 import getCurrentUser from '@/app/actions/getCurrentUser';
 import prisma from '@/app/libs/prismadb';
 import { NextResponse } from 'next/server';
+import { pusherServer } from '@/app/libs/pusher';
 
 interface IParams {
   conversationId?: string;
 }
 
+// DELETE API for deleting a conversation
+export async function DELETE(
+  request: Request,
+  { params }: { params: IParams }
+) {
+  try {
+    if (!params.conversationId) {
+      return new NextResponse('Conversation ID required', { status: 400 });
+    }
+    const existingConversation = await verifyConversationExists(params.conversationId);
+
+    const currentUser = await verifyUser();
+
+    const result = await deleteConversation(params.conversationId, currentUser.id);
+
+    existingConversation.users.forEach((user) => {
+      if (user.email) {
+        pusherServer.trigger(user.email, 'conversation:remove', existingConversation);
+      }
+    });
+
+    return NextResponse.json(result);
+  } catch (error: any) {
+    console.error(error.message, 'ERROR_CONVERSATION_DELETE');
+    const status = error.message === 'Unauthorized' ? 401 : error.message === 'Invalid ID' ? 400 : 500;
+    return new NextResponse(error.message, { status });
+  }
+}
+
+/**
+ * * Helper functions
+ */
 // Helper function to verify user
 async function verifyUser() {
   const currentUser = await getCurrentUser();
@@ -39,27 +72,4 @@ async function deleteConversation(conversationId: string, userId: string) {
       },
     },
   });
-}
-
-// DELETE API for deleting a conversation
-export async function DELETE(
-  request: Request,
-  { params }: { params: IParams }
-) {
-  try {
-    if (!params.conversationId) {
-      return new NextResponse('Conversation ID required', { status: 400 });
-    }
-    await verifyConversationExists(params.conversationId);
-
-    const currentUser = await verifyUser();
-
-    const result = await deleteConversation(params.conversationId, currentUser.id);
-
-    return NextResponse.json(result);
-  } catch (error: any) {
-    console.error(error.message, 'ERROR_CONVERSATION_DELETE');
-    const status = error.message === 'Unauthorized' ? 401 : error.message === 'Invalid ID' ? 400 : 500;
-    return new NextResponse(error.message, { status });
-  }
 }

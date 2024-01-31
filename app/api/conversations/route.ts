@@ -1,7 +1,7 @@
 import getCurrentUser from '@/app/actions/getCurrentUser';
 import { NextResponse } from 'next/server';
 import prisma from '@/app/libs/prismadb';
-
+import { pusherServer } from '@/app/libs/pusher';
 
 /**
  * Handle POST request to create a new conversation or retrieve an existing one.
@@ -87,6 +87,16 @@ export async function POST(request: Request) {
           ],
         },
       },
+      include: {
+        users: true,
+      }
+    });
+
+    // Update all connections with new conversation
+    newConversation.users.forEach((user) => {
+      if (user.email) {
+        pusherServer.trigger(user.email, 'conversation:new', newConversation);
+      }
     });
 
     return NextResponse.json(newConversation);
