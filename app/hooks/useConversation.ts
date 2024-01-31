@@ -3,7 +3,7 @@ import { useParams } from 'next/navigation';
 const useConversation = () => {
   const params = useParams();
 
-  const conversationId = params.conversationId
+  const conversationId = params?.conversationId
     ? (params.conversationId as string)
     : '';
 
